@@ -15,15 +15,24 @@ This utility compresses audio files to under 25MB and transcribes them using Ope
 ## Usage
 
 ```bash
-python whisper_transcribe.py -i <input_audio_file> [--transcribe]
+python whisper_transcribe.py -i <input_audio_file> [--compress-only]
 ```
 
-- `-i`, `--input` (required): Specify the input audio file path.
-- `--transcribe` (optional): Enable transcription using OpenAI Whisper API.
+- `-i`, `--input` (required): Specify the input audio file path
+- `-c`, `--compress-only` (optional): Compress the audio file only (no transcription)
 
-Example:
+### Examples
+
+Transcribe an audio file:
+
 ```bash
-python whisper_transcribe.py -i path/to/audio.mp3 --transcribe
+python whisper_transcribe.py -i path/to/audio.mp3
+```
+
+Compress an audio file to under 25MB without transcription:
+
+```bash
+python whisper_transcribe.py -i path/to/audio.mp3 -c
 ```
 
 ## Features

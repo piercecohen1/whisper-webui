@@ -19,10 +19,13 @@ def calculate_bitrate(input_file, target_size):
 
 def compress_audio(input_file, output_file, bitrate):
     print(f"Compressing audio file: {input_file}")
+    start_time = time.time()
     audio = AudioSegment.from_file(input_file)
     print(f"Exporting compressed audio to: {output_file}")
     audio.export(output_file, format='mp3', bitrate=f'{bitrate}k')
-    print("Audio compression completed.")
+    end_time = time.time()
+    compression_time = end_time - start_time
+    print(f"Audio compression completed in {compression_time:.2f} seconds.")
 
 def is_valid_audio_format(input_file):
     valid_formats = ['.mp3', '.mp4', '.mpeg', '.mpga', '.m4a', '.wav', '.webm']
@@ -40,8 +43,8 @@ def transcribe_audio(input_file, output_file):
             response_format="text"
         )
         end_time = time.time()
-        elapsed_time = end_time - start_time
-        print(f"API response time: {elapsed_time:.2f} seconds")
+        transcription_time = end_time - start_time
+        print(f"Audio transcription completed in {transcription_time:.2f} seconds.")
     with open(output_file, "w") as transcript_file:
         transcript_file.write(transcript)
     print(f"Transcript saved to: {output_file}")
@@ -49,7 +52,7 @@ def transcribe_audio(input_file, output_file):
 def main():
     parser = argparse.ArgumentParser(description='Compress audio file and transcribe using OpenAI Whisper API')
     parser.add_argument('-i', '--input', required=True, help='Input audio file')
-    parser.add_argument('-t', '--transcribe', action='store_true', help='Transcribe the audio using OpenAI Whisper API')
+    parser.add_argument('-c', '--compress-only', action='store_true', help='Compress the audio file only (no transcription)')
     args = parser.parse_args()
 
     input_file = args.input
@@ -75,7 +78,7 @@ def main():
     else:
         print("Input file size is within the allowed limit. No compression needed.")
 
-    if args.transcribe:
+    if not args.compress_only:
         transcript_file = f'{os.path.splitext(input_file)[0]}_transcript.txt'
         transcribe_audio(input_file, transcript_file)
 
