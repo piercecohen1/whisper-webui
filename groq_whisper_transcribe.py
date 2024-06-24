@@ -2,7 +2,7 @@ import argparse
 import os
 import time
 from pydub import AudioSegment
-from openai import OpenAI
+from groq import Groq
 import pyperclip
 
 def get_audio_info(input_file):
@@ -35,27 +35,26 @@ def is_valid_audio_format(input_file):
 
 def transcribe_audio(input_file, output_file, copy_to_clipboard):
     print(f"Transcribing audio file: {input_file}")
-    client = OpenAI()
-    with open(input_file, "rb") as audio_file:
+    client = Groq()
+    with open(input_file, "rb") as file:
         start_time = time.time()
-        transcript = client.audio.transcriptions.create(
-            model="whisper-1",
-            file=audio_file,
-            response_format="text"
+        transcription = client.audio.transcriptions.create(
+            file=(input_file, file.read()),
+            model="whisper-large-v3",
         )
         end_time = time.time()
         transcription_time = end_time - start_time
         print(f"Audio transcription completed in {transcription_time:.2f} seconds.")
     with open(output_file, "w") as transcript_file:
-        transcript_file.write(transcript)
+        transcript_file.write(transcription.text)
     print(f"Transcript saved to: {output_file}")
 
     if copy_to_clipboard:
-        pyperclip.copy(transcript)
+        pyperclip.copy(transcription.text)
         print("Transcription text copied to clipboard.")
 
 def main():
-    parser = argparse.ArgumentParser(description='Compress audio file and transcribe using OpenAI Whisper API')
+    parser = argparse.ArgumentParser(description='Compress audio file and transcribe using Groq Whisper API')
     parser.add_argument('-i', '--input', required=True, help='Input audio file')
     parser.add_argument('-o', '--output', help='Output filename for the transcript')
     parser.add_argument('--compress-only', action='store_true', help='Compress the audio file only (no transcription)')
