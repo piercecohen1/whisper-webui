@@ -3,6 +3,7 @@ import os
 import time
 from pydub import AudioSegment
 from groq import Groq
+from openai import OpenAI
 import tempfile
 import pyperclip
 
@@ -26,7 +27,7 @@ def is_valid_audio_format(filename):
     _, extension = os.path.splitext(filename)
     return extension.lower() in valid_formats
 
-def transcribe_audio(input_file):
+def transcribe_audio_groq(input_file):
     client = Groq()
     with open(input_file, "rb") as file:
         start_time = time.time()
@@ -36,6 +37,18 @@ def transcribe_audio(input_file):
         )
         end_time = time.time()
     return transcription.text, end_time - start_time
+
+def transcribe_audio_openai(input_file):
+    client = OpenAI()
+    with open(input_file, "rb") as audio_file:
+        start_time = time.time()
+        transcript = client.audio.transcriptions.create(
+            model="whisper-1",
+            file=audio_file,
+            response_format="text"
+        )
+        end_time = time.time()
+    return transcript, end_time - start_time
 
 def save_transcript_to_file(transcript, filename):
     try:
@@ -54,6 +67,8 @@ def main():
         st.session_state.transcript = ""
     if 'transcription_time' not in st.session_state:
         st.session_state.transcription_time = 0
+
+    api_choice = st.radio("Select API for transcription:", ("OpenAI", "Groq"))
 
     uploaded_file = st.file_uploader("Choose an audio file", type=["mp3", "mp4", "mpeg", "mpga", "m4a", "wav", "webm"])
 
@@ -82,8 +97,11 @@ def main():
                     st.write("File size is within the allowed limit. No compression needed.")
                     input_file = temp_input.name
 
-                st.write("Transcribing audio...")
-                st.session_state.transcript, st.session_state.transcription_time = transcribe_audio(input_file)
+                st.write(f"Transcribing audio using {api_choice} API...")
+                if api_choice == "OpenAI":
+                    st.session_state.transcript, st.session_state.transcription_time = transcribe_audio_openai(input_file)
+                else:  # Groq
+                    st.session_state.transcript, st.session_state.transcription_time = transcribe_audio_groq(input_file)
                 st.write(f"Transcription complete! Time taken: {st.session_state.transcription_time:.2f} seconds")
 
                 # Cleanup temporary files
@@ -91,12 +109,10 @@ def main():
                 if file_size > 25:
                     os.unlink(compressed_file)
 
-    # Always display the transcript if it exists
     if st.session_state.transcript:
         st.subheader("Transcript:")
         st.text_area("", value=st.session_state.transcript, height=300)
 
-        # Copy to clipboard button
         if st.button("Copy to Clipboard"):
             try:
                 pyperclip.copy(st.session_state.transcript)
@@ -104,7 +120,6 @@ def main():
             except Exception as e:
                 st.error(f"Failed to copy to clipboard: {str(e)}")
 
-        # Save to file section
         st.subheader("Save Transcript to File")
         output_filename = st.text_input("Enter output filename for transcript:")
         if st.button("Save Transcript"):

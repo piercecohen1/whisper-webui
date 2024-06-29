@@ -3,6 +3,7 @@ import os
 import time
 from pydub import AudioSegment
 from openai import OpenAI
+from groq import Groq
 import pyperclip
 
 def get_audio_info(input_file):
@@ -33,8 +34,8 @@ def is_valid_audio_format(input_file):
     _, extension = os.path.splitext(input_file)
     return extension.lower() in valid_formats
 
-def transcribe_audio(input_file, output_file, copy_to_clipboard):
-    print(f"Transcribing audio file: {input_file}")
+def transcribe_audio_openai(input_file, output_file, copy_to_clipboard):
+    print(f"Transcribing audio file using OpenAI: {input_file}")
     client = OpenAI()
     with open(input_file, "rb") as audio_file:
         start_time = time.time()
@@ -46,6 +47,25 @@ def transcribe_audio(input_file, output_file, copy_to_clipboard):
         end_time = time.time()
         transcription_time = end_time - start_time
         print(f"Audio transcription completed in {transcription_time:.2f} seconds.")
+    
+    save_transcript(transcript, output_file, copy_to_clipboard)
+
+def transcribe_audio_groq(input_file, output_file, copy_to_clipboard):
+    print(f"Transcribing audio file using Groq: {input_file}")
+    client = Groq()
+    with open(input_file, "rb") as file:
+        start_time = time.time()
+        transcription = client.audio.transcriptions.create(
+            file=(input_file, file.read()),
+            model="whisper-large-v3",
+        )
+        end_time = time.time()
+        transcription_time = end_time - start_time
+        print(f"Audio transcription completed in {transcription_time:.2f} seconds.")
+    
+    save_transcript(transcription.text, output_file, copy_to_clipboard)
+
+def save_transcript(transcript, output_file, copy_to_clipboard):
     with open(output_file, "w") as transcript_file:
         transcript_file.write(transcript)
     print(f"Transcript saved to: {output_file}")
@@ -55,16 +75,18 @@ def transcribe_audio(input_file, output_file, copy_to_clipboard):
         print("Transcription text copied to clipboard.")
 
 def main():
-    parser = argparse.ArgumentParser(description='Compress audio file and transcribe using OpenAI Whisper API')
+    parser = argparse.ArgumentParser(description='Compress audio file and transcribe using OpenAI or Groq Whisper API')
     parser.add_argument('-i', '--input', required=True, help='Input audio file')
     parser.add_argument('-o', '--output', help='Output filename for the transcript')
     parser.add_argument('--compress-only', action='store_true', help='Compress the audio file only (no transcription)')
     parser.add_argument('-c', '--clipboard', action='store_true', help='Copy the transcription text to the system clipboard')
+    parser.add_argument('--api', choices=['openai', 'groq'], default='openai', help='Choose API for transcription (default: openai)')
     args = parser.parse_args()
 
     input_file = args.input
     output_file = args.output
     copy_to_clipboard = args.clipboard
+    api_choice = args.api
 
     print(f"Input file: {input_file}")
 
@@ -92,7 +114,11 @@ def main():
             transcript_file = f'{os.path.splitext(input_file)[0]}_transcript.txt'
         else:
             transcript_file = output_file
-        transcribe_audio(input_file, transcript_file, copy_to_clipboard)
+        
+        if api_choice == 'openai':
+            transcribe_audio_openai(input_file, transcript_file, copy_to_clipboard)
+        else:
+            transcribe_audio_groq(input_file, transcript_file, copy_to_clipboard)
 
 if __name__ == '__main__':
     main()
