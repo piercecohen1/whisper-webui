@@ -60,7 +60,7 @@ def save_transcript_to_file(transcript, filename):
         return False
 
 def main():
-    st.title("Audio Transcription App")
+    st.title("Whisper Web UI")
 
     # Use session state to store the transcript
     if 'transcript' not in st.session_state:
