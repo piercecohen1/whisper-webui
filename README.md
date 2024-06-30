@@ -2,6 +2,8 @@
 
 This project provides both a Streamlit web application (`whisper_webui.py`) and a command-line interface (`whisper_cli.py`) for transcribing audio files using the Whisper Large v3 model via either the OpenAI or Groq API. It offers a user-friendly interface for uploading audio, processing it, and obtaining transcriptions quickly and efficiently.
 
+![Screenshot_003781](https://github.com/piercecohen1/whisper-webui/assets/19575201/b1eedffc-1cdb-4671-bfcb-156d770d68ea)
+
 ## Features
 
 - Automatic compression for files larger than 25MB
