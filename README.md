@@ -8,7 +8,7 @@ This project provides both a Streamlit web application (`whisper_webui.py`) and 
 
 - Automatic compression for files larger than 25MB
 - Support for multiple audio formats (mp3, mp4, mpeg, mpga, m4a, wav, webm)
-- Transcription using Whisper Large v3 model through OpenAI or Groq API
+- Transcription using Whisper Large v3 model through OpenAI, Groq, or Fal API
 - Display of transcription time and results
 - Option to copy transcript to clipboard
 - Ability to save transcript to a file
@@ -77,6 +77,12 @@ Examples:
    ```
    python whisper_cli.py -i large_file.mp3 --compress-only
    ```
+
+## Note on Fal API Usage
+
+If using the Fal.ai API for transcription, the application uploads your audio file to tmpfiles.org. This step is necessary because the Fal API requires input files to be accessible via a public URL.
+
+Please ensure that you have the necessary rights to upload and make your audio public. Do not use this method for sensitive recordings.
 
 ## Contributing
 
